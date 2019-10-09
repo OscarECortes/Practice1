@@ -31,6 +31,6 @@ fill:
 	sw $s0, ($s1)			# put disk in tower 1 (initial)
 	addi $s0, $s0, -1		# substract 1 from n
 	addi $s1, $s1, 4		# initial tower 1 pointer + 4, to load next byte
-	bne $s0, $zero, fill
+	bne $s0, $zero, fill		# loop to fill if there are still disks to be added
 
 
