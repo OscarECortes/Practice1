@@ -20,12 +20,17 @@ cleanRegister:				#clean the registers used
 	sub $s0, $s0, $s0
 	sub $s1, $s1, $s1
 		
-init:
+initMemo:
 	addi $s0, $s0, 3 		# numero de discos n (used only for initial storage)
 	add $a0, $a0, $s0		# copy of n (used for the recursive function and through program)
 	addi $s1, $s1, 0x10010000	# loading initial torre1 pointer value	(initial)
 	addi $s2, $s2, 0x10010020	# loading initial torre2 pointer value	(aux)
 	addi $s3, $s3, 0x10010040	# loading initial torre3 pointer value  (dest)
-
+	
+fill:
+	sw $s0, ($s1)			# put disk in tower 1 (initial)
+	addi $s0, $s0, -1		# substract 1 from n
+	addi $s1, $s1, 4		# initial tower 1 pointer + 4, to load next byte
+	bne $s0, $zero, fill
 
 
