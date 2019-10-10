@@ -48,9 +48,9 @@ storeFirst:
 	# check if theres anything in destiny tower
 checkDest:	
 	lw $t0, ($s3)			# load value from $s3(tower3) in $t0
-	beq $t0, 0, storeDest		# if $s3 was empty, branch to storedest
+	beq $t0, 0, saveDest		# if $s3 was empty, branch to saveDest
 	addi $s3, $s3, 4		# if $s3 had something, go to next data place
-	j saveSum			# jump to storesum, to check next byte
+	j storeFirst			# jump to storeFirst, to check next byte
 	
 saveDest:	  
 	sw $v0, ($s3)			# store tower1's(init) value in tower3(dest)
