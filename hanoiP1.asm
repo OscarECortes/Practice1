@@ -64,11 +64,11 @@ moveByte:
 	j storeFirst			# otherwise, get back to storeFirst
 
 algorithm:
-	# make room in stack for variables
+	# move the stack to store data
 	addi $sp, $sp, -20
 	
-	# store all tower pointers, n, and ra to stack
-	sw $a0, 16($sp)			# n
+	# store the number of disks, the tower positions and the address to return
+	sw $a0, 16($sp)			# number of disks
 	sw $s1, 12($sp)			# tower1 (init)
 	sw $s2, 8($sp)			# tower2 (aux)
 	sw $s3, 4($sp)			# tower3 (dest)
