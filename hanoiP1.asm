@@ -34,3 +34,42 @@ fill:
 	bne $s0, $zero, fill		# loop to fill if there are still disks to be added
 
 
+#Check if it would do the firtst case or the other steps	
+ifElse: 	
+	bne $a0, 1, algorithm		# if there are disks on tower1 go to else
+	lw $v0, ($s1)			# load tower1's first value to v0
+
+storeFirst:
+	bne $v0, $zero, moveByte	# If current value is not zero, jump to moveByte to get a zero
+	addi $s1, $s1, -4		# take the byte before (tracklastbyte left the pointer in a 0 value)
+	lw $v0, ($s1)			# load definite store value in v0
+	sw $zero, ($s1)			# delete value from tower1
+	
+	# check if theres anything in destiny tower
+checkDest:	
+	lw $t0, ($s3)			# load value from $s3(tower3) in $t0
+	beq $t0, 0, storeDest		# if $s3 was empty, branch to storedest
+	addi $s3, $s3, 4		# if $s3 had something, go to next data place
+	j storeSum			# jump to storesum, to check next byte
+	
+storeDest:	  
+	sw $v0, ($s3)			# store tower1's(init) value in tower3(dest)
+	jr $ra				# return to main function
+	
+	# this function goes to the last value of the data
+moveByte:
+	addi $s1, $s1, 4		# increments tower1 pointer by 4 to get next value
+	lw $v0, ($s1)			# loads the value in $v0
+	bne $v0, $zero, moveByte	# if current byte has a value, branch to moveByte again
+	j storeFirst			# otherwise, get back to storeFirst
+
+algorithm:
+	# make room in stack for variables
+	addi $sp, $sp, -20
+	
+	# store all tower pointers, n, and ra to stack
+	sw $a0, 16($sp)			# n
+	sw $s1, 12($sp)			# tower1 (init)
+	sw $s2, 8($sp)			# tower2 (aux)
+	sw $s3, 4($sp)			# tower3 (dest)
+	sw $ra, 0($sp)			# store ra
