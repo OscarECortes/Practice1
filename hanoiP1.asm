@@ -37,12 +37,12 @@ fill:
 #Check if it would do the firtst case or the other steps	
 ifElse: 	
 	bne $a0, 1, algorithm		# if there are disks on tower1 go to else
-	lw $v0, ($s1)			# load tower1's first value to v0
+	lw $t0, ($s1)			# load tower1's first value to v0
 
 storeFirst:
-	bne $v0, $zero, moveByte	# If current value is not zero, jump to moveByte to get a zero
+	bne $t0, $zero, moveByte	# If current value is not zero, jump to moveByte to get a zero
 	addi $s1, $s1, -4		# take the byte before (tracklastbyte left the pointer in a 0 value)
-	lw $v0, ($s1)			# load definite store value in v0
+	lw $t0, ($s1)			# load definite store value in v0
 	sw $zero, ($s1)			# delete value from tower1
 	
 	# check if theres anything in destiny tower
@@ -53,14 +53,14 @@ checkDest:
 	j storeFirst			# jump to storeFirst, to check next byte
 	
 saveDest:	  
-	sw $v0, ($s3)			# store tower1's(init) value in tower3(dest)
+	sw $t0, ($s3)			# store tower1's(init) value in tower3(dest)
 	jr $ra				# return to main function
 	
 	# this function goes to the last value of the data
 moveByte:
 	addi $s1, $s1, 4		# increments tower1 pointer by 4 to get next value
-	lw $v0, ($s1)			# loads the value in $v0
-	bne $v0, $zero, moveByte	# if current byte has a value, branch to moveByte again
+	lw $t0, ($s1)			# loads the value in $v0
+	bne $t0, $zero, moveByte	# if current byte has a value, branch to moveByte again
 	j storeFirst			# otherwise, get back to storeFirst
 
 algorithm:
