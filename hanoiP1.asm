@@ -41,16 +41,16 @@ ifElse:
 
 storeFirst:
 	bne $t0, $zero, moveByte	# If current value is not zero, jump to moveByte to get a zero
-	addi $s1, $s1, -4		# take the byte before (tracklastbyte left the pointer in a 0 value)
-	lw $t0, ($s1)			# load definite store value in v0
-	sw $zero, ($s1)			# delete value from tower1
+	addi $s1, $s1, -4		# go to the position before a zero that was obtained in moveByte, here is the first disk
+	lw $t0, ($s1)			# load the value of the first disk in t0
+	sub $s1, $s1, $s1		# delete value from top of first tower
 	
 	# check if theres anything in destiny tower
 checkDest:	
 	lw $t0, ($s3)			# load value from $s3(tower3) in $t0
-	beq $t0, 0, saveDest		# if $s3 was empty, branch to saveDest
-	addi $s3, $s3, 4		# if $s3 had something, go to next data place
-	j storeFirst			# jump to storeFirst, to check next byte
+	beq $t0, 0, saveDest		# if $s3 is 0, branch to saveDest
+	addi $s3, $s3, 4		# if $s3 has values, move pointer
+	j storeFirst			# jump to beginning to check again
 	
 saveDest:	  
 	sw $t0, ($s3)			# store tower1's(init) value in tower3(dest)
@@ -59,9 +59,9 @@ saveDest:
 	# this function goes to the last value of the data
 moveByte:
 	addi $s1, $s1, 4		# increments tower1 pointer by 4 to get next value
-	lw $t0, ($s1)			# loads the value in $v0
-	bne $t0, $zero, moveByte	# if current byte has a value, branch to moveByte again
-	j storeFirst			# otherwise, get back to storeFirst
+	lw $t0, ($s1)			# loads the value in $t0
+	bne $t0, $zero, moveByte	# if the position has value, move again
+	j storeFirst			# if the position has 0 go to the beginning
 
 algorithm:
 	# move the stack to store data
@@ -74,4 +74,12 @@ algorithm:
 	sw $s2, 8($sp)			# tower2 (aux)
 	sw $a0, 16($sp)			# number of disks
 	sw $s1, 12($sp)			# tower1 (init)
+	
+# 	Hanoi algorithm with n-1 instead of n, based on C recursive algorithm
+	addi $a0, $a0, -1		# decrease n as the case n-1 is done
+	lw $t1, ($s3)			#load s3 on t1 to save this data
+	addi $s3, $s2, 0		# move what is in aux tower ot dest tower
+	sw $t1, ($s2)			# move what was on dest (temporal) to aux
+	
+	jal ifElse			# call function
 	
