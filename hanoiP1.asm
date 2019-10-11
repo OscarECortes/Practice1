@@ -72,14 +72,20 @@ algorithm:
 	sw $ra, 0($sp)			# store ra
 	sw $s3, 4($sp)			# tower3 (dest)
 	sw $s2, 8($sp)			# tower2 (aux)
-	sw $a0, 16($sp)			# number of disks
 	sw $s1, 12($sp)			# tower1 (init)
+	sw $a0, 16($sp)			# number of disks
 	
 # 	Hanoi algorithm with n-1 instead of n, based on C recursive algorithm
 	addi $a0, $a0, -1		# decrease n as the case n-1 is done
 	lw $t1, ($s3)			#load s3 on t1 to save this data
 	addi $s3, $s2, 0		# move what is in aux tower ot dest tower
 	sw $t1, ($s2)			# move what was on dest (temporal) to aux
-	
 	jal ifElse			# call function
+	
+	# store the number of disks, the tower positions and the address to return again, as a new step is done
+	sw $ra, 0($sp)			# store ra
+	sw $s3, 4($sp)			# tower3 (dest)
+	sw $s2, 8($sp)			# tower2 (aux)
+	sw $s1, 12($sp)			# tower1 (init)
+	sw $a0, 16($sp)			# number of disks
 	
