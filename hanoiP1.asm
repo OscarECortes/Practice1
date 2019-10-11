@@ -75,7 +75,7 @@ algorithm:
 	sw $s1, 12($sp)			# tower1 (init)
 	sw $a0, 16($sp)			# number of disks
 	
-# 	Hanoi algorithm with n-1 instead of n, based on C recursive algorithm
+ 	# Hanoi algorithm with n-1 instead of n, based on C recursive algorithm, the order of towers ir init, dest, aux
 	addi $a0, $a0, -1		# decrease n as the case n-1 is done
 	lw $t1, ($s3)			#load s3 on t1 to save this data
 	addi $s3, $s2, 0		# move what is in aux tower ot dest tower
