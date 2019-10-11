@@ -34,9 +34,9 @@ fill:
 	bne $s0, $zero, fill		# loop to fill if there are still disks to be added
 
 
-#Check if it would do the firtst case or the other steps	
+#Check if it would do the first case or the other steps	
 ifElse: 	
-	bne $a0, 1, algorithm		# if there are disks on tower1 go to else
+	bne $a0, 1, algorithm		# if there are disks on tower1 go to algorithm
 	lw $t0, ($s1)			# load tower1's first value to v0
 
 storeFirst:
@@ -68,8 +68,10 @@ algorithm:
 	addi $sp, $sp, -20
 	
 	# store the number of disks, the tower positions and the address to return
+	
+	sw $ra, 0($sp)			# store ra
+	sw $s3, 4($sp)			# tower3 (dest)
+	sw $s2, 8($sp)			# tower2 (aux)
 	sw $a0, 16($sp)			# number of disks
 	sw $s1, 12($sp)			# tower1 (init)
-	sw $s2, 8($sp)			# tower2 (aux)
-	sw $s3, 4($sp)			# tower3 (dest)
-	sw $ra, 0($sp)			# store ra
+	
