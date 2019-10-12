@@ -1,91 +1,103 @@
 
+# Author: Sergio Méndez, Oscar Cortés
+# Date: Oct 12, 2019
 
-## ** NOTE: For easier visualization on Mars, the program is set to work only with 8 disks (the pointers
-## start messing up with each other because they are set up to hold only 8 bytes), if you want to use a
-## bigger n (disks), use different initial memory addresses for $s1, $s2, and $s3.
+# Registers:
 
+# Hanoi towers code using recursive instructions and limited instruction set
+# It uses a variable for number of disks in tower 1, pointers to the first direction of the towers and a counter
+# to the total of elements in each tower multipled by 4 to serve as a couter
 
-.text
+.data
 
-	addi $s0, $s0, 0x10010000	#Limit of memory
-	addi $s1, $s1, 0x10010060	#Limit of memory
+.text 
+	addi $a0, $zero, 8		# Number of disks
+	addi $a1, $zero, 0x10010000	# Address of init tower
+	addi $a2, $zero, 0x10010020     # Address of aux tower
+	addi $a3, $zero, 0x10010040	# Address of dest tower
 	
-initZero:
-	beq $s0, $s1, cleanRegister 	#if the limits are the same, branch to cleanRegister
-	sw $zero, ($s0)			#Initialization of zeros
-	addi $s0, $s0, 4		#move to next byte
-	j initZero			#loop
+	addi $s1, $zero, -4		# Indication of no disks is -4 on number of disks' pointer
+	addi $s2, $zero, -4
+	addi $s3, $zero, -4
+
+	add $t0, $zero, $a0		# t0 = number of disks, serves as counter
+	addi $t1, $zero, 0x10010000	# t1 = pointer to the first tower
 	
-cleanRegister:				#clean the registers used
-	sub $s0, $s0, $s0
-	sub $s1, $s1, $s1
+initial:	#Loading of disks to init tower
+	beq $t0, $zero, main	# If tower is full, go to main
+	sw $t0, 0($t1)		# Saves the disk in it's current postion
+	addi $t1, $t1, 4	# Increment tower address pointer to go to next position
+	addi $s1, $s1, 4	# Increase the number of disks in initial tower
+	addi $t0, $t0, -1	# Decrement value of t0 to add the next value
+	j initial		# Loop the instrucion
 		
-initMemo:
-	addi $s0, $s0, 3 		# numero de discos n (used only for initial storage)
-	add $a0, $a0, $s0		# copy of n (used for the recursive function and through program)
-	addi $s1, $s1, 0x10010000	# loading initial torre1 pointer value	(initial)
-	addi $s2, $s2, 0x10010020	# loading initial torre2 pointer value	(aux)
-	addi $s3, $s3, 0x10010040	# loading initial torre3 pointer value  (dest)
+main:				
+	jal hanoi		# Go to the code	
+	j end			# End the code
+
+hanoi:  # Non-recursive section
+	addi $t0, $zero, 1	# Increase t0 in 1, t0 starts in 0 after filling
+	bne $a0, $t0, else	# If n = 1, moves the first disk ot dest, if not do the algorithm in else
+	add $t1, $zero, $ra	# load in t1 the return address
+	jal firstCase		# jump to the first case, moving a1(init) to a3(aux)
+	jr $t1
 	
-fill:
-	sw $s0, ($s1)			# put disk in tower 1 (initial)
-	addi $s0, $s0, -1		# substract 1 from n
-	addi $s1, $s1, 4		# initial tower 1 pointer + 4, to load next byte
-	bne $s0, $zero, fill		# loop to fill if there are still disks to be added
+else:	# Recursive section
+	addi $sp, $sp, -20	# Push arguments and $ra to the stack
+	sw $a0, 0($sp)		# number of disks
+	sw $a1, 4($sp)		# pointer to init tower
+	sw $a2, 8($sp)		# pointer to aux tower 
+	sw $a3, 12($sp)		# pointer to dest tower
+	sw $ra, 16($sp)		# return address
+
+	add $t1, $zero, $a2	# put a2(aux) pointer value on t1
+	add $a2, $zero, $a3	# put a3(dest) pointer value on a2(aux)
+	add $a3, $zero, $t1	# put t1(original a2) pointer value on a3(dest), swap of a2 and a3
+	add $t2, $zero, $s2	# we also swap in the same logic the s2 and s3 values
+	add $s2, $zero, $s3
+	add $s3, $zero, $t2
+	addi $a0, $a0, -1	# Decrement number of disks for the next step in algorithm
+	jal hanoi		# hanoi(n - 1, init, dest, aux)
+				# Based on the recursive C code
+
+	add $t2, $zero, $s2	# unswap $s2 and $s3, needed so that the tower pointer always matches 
+	add $s2, $zero, $s3	# number of disks' pointer
+	add $s3, $zero, $t2			
+				# load arguments from stack
+	lw $a0, 0($sp)		# number of disks
+	lw $a1, 4($sp)		# pointer to init tower
+	lw $a2, 8($sp)		# pointer to aux tower
+	lw $a3, 12($sp)		# pointer to destiny tower
+	lw $ra, 16($sp)		# return adress
+	jal firstCase		# go to the first case non-recursive algorithm 
+
+	add $t1, $zero, $a2	# put a2(aux) to t1
+	add $a2, $zero, $a1	# put a1(init) to a2(aux)
+	add $a1, $zero, $t1	# put t1 (origial a2) to a1, swapping of a2 and a1
+	add $t2, $zero, $s2	# same process but with s1(init) and s2(aux)
+	add $s2, $zero, $s1	# so it can keep this values
+	add $s1, $zero, $t2	
+	addi $a0, $a0, -1	#reduce number of disks in init by 1
+	jal hanoi 		# hanoi(n - 1, aux, init, dest)
+				# Based on C recursive code
+
+	add $t2, $zero, $s2	# unswap $s2 and $s3, needed so that the tower pointer always matches 
+	add $s2, $zero, $s1	# number of disks' pointer
+	add $s1, $zero, $t2
+
+	lw $ra, 16($sp)		# Get the last return adress from the stack
+	addi $sp, $sp, 20	# Move to the previous value of the stack
+	jr $ra			# Go to the return address
 
 
-#Check if it would do the first case or the other steps	
-ifElse: 	
-	bne $a0, 1, algorithm		# if there are disks on tower1 go to algorithm
-	lw $t0, ($s1)			# load tower1's first value to v0
+firstCase:  # Hanoi(n, init, aux, dest) First case of C recurisve code, wich does a basic move from init to dest
+	add $t0, $a1, $s1 	# t0 becomes a pointer to disk on top of init tower
+	sw $zero, 0($t0)	# Removes the disk from top of the tower
+	addi $s1, $s1, -4	# We remove 1 disk from the number of disks pointer
 
-storeFirst:
-	bne $t0, $zero, moveByte	# If current value is not zero, jump to moveByte to get a zero
-	addi $s1, $s1, -4		# go to the position before a zero that was obtained in moveByte, here is the first disk
-	lw $t0, ($s1)			# load the value of the first disk in t0
-	sub $s1, $s1, $s1		# delete value from top of first tower
-	
-	# check if theres anything in destiny tower
-checkDest:	
-	lw $t0, ($s3)			# load value from $s3(tower3) in $t0
-	beq $t0, 0, saveDest		# if $s3 is 0, branch to saveDest
-	addi $s3, $s3, 4		# if $s3 has values, move pointer
-	j storeFirst			# jump to beginning to check again
-	
-saveDest:	  
-	sw $t0, ($s3)			# store tower1's(init) value in tower3(dest)
-	jr $ra				# return to main function
-	
-	# this function goes to the last value of the data
-moveByte:
-	addi $s1, $s1, 4		# increments tower1 pointer by 4 to get next value
-	lw $t0, ($s1)			# loads the value in $t0
-	bne $t0, $zero, moveByte	# if the position has value, move again
-	j storeFirst			# if the position has 0 go to the beginning
+	addi $s3, $s3, 4	# Add one value to the distiny tower disks' number pointer
+	add $t0, $a3, $s3	# t0 becomes a pointer to the top of the tower
+	sw $a0, 0($t0)		# store in top of destiny tower the disk removed from init tower
+	jr $ra			# Return to the stored address
 
-algorithm:
-	# move the stack to store data
-	addi $sp, $sp, -20
-	
-	# store the number of disks, the tower positions and the address to return
-	
-	sw $ra, 0($sp)			# store ra
-	sw $s3, 4($sp)			# tower3 (dest)
-	sw $s2, 8($sp)			# tower2 (aux)
-	sw $s1, 12($sp)			# tower1 (init)
-	sw $a0, 16($sp)			# number of disks
-	
- 	# Hanoi algorithm with n-1 instead of n, based on C recursive algorithm, the order of towers ir init, dest, aux
-	addi $a0, $a0, -1		# decrease n as the case n-1 is done
-	lw $t1, ($s3)			#load s3 on t1 to save this data
-	addi $s3, $s2, 0		# move what is in aux tower ot dest tower
-	sw $t1, ($s2)			# move what was on dest (temporal) to aux
-	jal ifElse			# call function
-	
-	# store the number of disks, the tower positions and the address to return again, as a new step is done
-	sw $ra, 0($sp)			# store ra
-	sw $s3, 4($sp)			# tower3 (dest)
-	sw $s2, 8($sp)			# tower2 (aux)
-	sw $s1, 12($sp)			# tower1 (init)
-	sw $a0, 16($sp)			# number of disks
-	
+end: 
